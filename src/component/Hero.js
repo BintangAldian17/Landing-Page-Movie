@@ -5,53 +5,87 @@ import Home3 from '../img/home3.jpg'
 import { FaPlay } from 'react-icons/fa'
 import { BsFillBookmarkFill } from 'react-icons/bs'
 import { AiFillStar } from 'react-icons/ai'
+import { CircularProgressbar } from 'react-circular-progressbar'
+import { useQuery } from 'react-query'
+import { getGenresMovie, getPopularMovies } from '../hooks/useMovieData'
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, History } from "swiper";
+import { useGetGenresName } from '../utils/useGetGenreName'
+import { Link } from 'react-router-dom'
+import { LoadingPage } from './pages/LoadingPage'
 
 
 export const Hero = () => {
+    const { isLoading, isFetching, data: dataHomeBanner, error, isError } = useQuery(['home-banner'], getPopularMovies, {
+        refetchOnWindowFocus: false
+    })
+    const { data: AllgenresName, } = useQuery(['genres-movies'], getGenresMovie,
+        {
+            refetchOnWindowFocus: false,
+            staleTime: 180 * 60 * 1000, // 3 hours
+
+        }
+    )
+
+    if (isLoading || isFetching) {
+        return <LoadingPage />
+    }
+
+    console.log({ dataHomeBanner });
+
     return (
-        <div className='w-full h-screen relative'>
-            <img src={Home1} alt='home' className=' w-full h-full absolute inset-0 object-cover' />
+        <div className=' w-full h-screen relative'>
+            <Swiper
+                loop={true}
+                centeredSlides={true}
+                autoplay={{
+                    delay: 4000,
+                    disableOnInteraction: false,
+                }}
+                navigation={false}
+                modules={[Autoplay, History]}
+                className=" w-full h-screen absolute">
+                {
+                    dataHomeBanner?.data.results.map((banner, i) => {
+                        // eslint-disable-next-line react-hooks/rules-of-hooks
+                        const genresMovie = useGetGenresName(AllgenresName?.data.genres, banner.genre_ids) ?? []
 
-            <div className=' w-full h-full bg-gradient-to-r from-black to-transparent absolute z-50'>
-                <div className=' h-full w-[70vh] items-center flex ml-32'>
-                    <div className=' flex flex-col gap-y-6'>
-                        <div className=' flex items-center gap-x-4'>
-                            <div className=' flex items-center gap-x-2'>
-                                <AiFillStar className=' text-yellow-300 w-5 h-5' />
-                                <span className=' text-xl font-semibold'>8.5</span>
-
-                            </div>
-                            <div className=' flex gap-x-2'>
-                                <span>Action </span>
-                                |
-                                <span>Advanture</span>
-                            </div>
-
-                        </div>
-                        <div>
-                            <h1 className=' text-5xl text-white font-bold '>
-                                Venom
-                            </h1>
-                            <p className=' text-white text-sm mt-4'>
-                                Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock,
-                            </p>
-                        </div>
-                        <div className=' flex gap-x-8 mt-10'>
-                            <button className=' bg-red-600 w-36 h-11 uppercase font-medium rounded-full flex items-center justify-center gap-x-2'>
-                                <FaPlay className='  text-white w-3 h-3' />
-                                <span> Watch</span></button>
-                            <button className=' bg-thirddark w-36 h-11 uppercase font-medium rounded-full flex items-center justify-center gap-x-2'>
-                                <BsFillBookmarkFill className=' w-3 h-5' />
-                                <span>
-                                    add list
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
+                        return (
+                            <SwiperSlide className=" w-full h-screen " key={i}>
+                                <div className=" w-full h-screen absolute z-50 bg-gradient-to-t via-transparent from-black to-transparent"></div>
+                                <div className=" w-full h-screen absolute z-50 bg-gradient-to-r from-black to-transparent pl-52">
+                                    <div className=" h-full  max-w-[600px] flex flex-col justify-center gap-y-10">
+                                        <h1 className=" text-[65px] leading-[80px] font-bold text-white drop-shadow-lg">
+                                            {banner.title}
+                                        </h1>
+                                        <div className=" text-white flex items-center gap-x-4">
+                                            {genresMovie.map((el) => {
+                                                return (
+                                                    <span className=" h-9 flex justify-center items-center px-4 rounded-full bg-red-600">
+                                                        {el.name}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className=" text-white drop-shadow-md">{banner.overview}</p>
+                                        <Link to={`/movie/${banner.id}`}>
+                                            <button className=" w-40 h-[45px] bg-red-600 shadow-xl rounded-lg flex justify-center items-center gap-x-3">
+                                                <FaPlay />
+                                                <span>Watch Now</span>
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+                                <img
+                                    src={`https://image.tmdb.org/t/p/original${banner.backdrop_path}`}
+                                    alt={banner.title}
+                                    className=" h-auto w-full"
+                                />
+                            </SwiperSlide>
+                        )
+                    })
+                }
+            </Swiper>
         </div>
-
     )
 }

@@ -5,7 +5,7 @@ module.exports = {
   ],
   theme: {
     fontFamily: {
-      primary: ['ubuntu', 'sans-serif']
+      primary: ['roboto', 'sans-serif']
     },
     extend: {
       colors: {
